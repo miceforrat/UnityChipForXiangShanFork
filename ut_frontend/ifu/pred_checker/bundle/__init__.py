@@ -1,8 +1,10 @@
 from toffee import Bundle, Signal, Signals
+from dut.PredChecker import DUTPredChecker
 from ... import PREDICT_WIDTH
+from .auto_bundle import _13Bundle
 
 class PreDecodeInfoBundle(Bundle):
-    isRVC, brType,isRet = Signals(3)
+    isRVC, brType, isRet = Signals(3)
     # ret = Signal()
 
 class IfuToPredCheckerBundle(Bundle):
@@ -17,15 +19,6 @@ class IfuToPredCheckerBundle(Bundle):
         locals()[f'pc_{i}'] = Signal()
 
         locals()[f'pds_{i}_'] = PreDecodeInfoBundle.from_prefix(f'pds_{i}_')
-
-    pds = []
-
-    def update1(self):
-        for i in range(PREDICT_WIDTH):
-
-            pds_str = f'pds_{i}_'
-            self.pds.append(getattr(self, pds_str))
-        print("init finished!")
     
 class Stage1OutBundle(Bundle):
     for i in range(PREDICT_WIDTH):
@@ -45,3 +38,12 @@ class PredCheckerRespBundle(Bundle):
 class PredCheckerIOBundle(Bundle):
     sig_in = IfuToPredCheckerBundle.from_prefix('in_')
     sig_out = PredCheckerRespBundle.from_prefix('out_')
+
+class InternalBundle(Bundle):
+    fixedRange = Signal()
+
+class PredCheckerBundle(Bundle):
+    def __init__(self, dut: DUTPredChecker):
+        super().__init__()
+        self.sig_io = PredCheckerIOBundle.from_prefix('io')
+        self.sig_self = Bundle.new_class_from_xport(dut.PredChecker).from_prefix("PredChecker_")

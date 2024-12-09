@@ -28,6 +28,7 @@ def build(cfg):
     # check files
     module_name = "PredChecker"
     file_name = "PredChecker.sv"
+    internal_signals_path="ut_frontend/ifu/pred_checker/pred_checker_internal.yaml"
     fpath = f"rtl/{file_name}"
     f = is_all_file_exist([fpath], get_rtl_dir(cfg=cfg))
     assert f is True, f"File {f} not found"
@@ -35,7 +36,8 @@ def build(cfg):
     # export PreDecode.sv 
     if not os.path.exists(get_root_dir(f"dut/{module_name}")):
         info(f"Exporting {file_name}")
-        s, out, err = exe_cmd(f'picker export --cp_lib false {get_rtl_dir(f"{fpath}", cfg=cfg)} --lang python --tdir {get_root_dir("dut")}/ -w {module_name}.fst -c')
+        s, out, err = exe_cmd(f'picker export --cp_lib false {get_rtl_dir(f"{fpath}", cfg=cfg)} \
+                              --lang python --tdir {get_root_dir("dut")}/ -w {module_name}.fst -c --internal={internal_signals_path}')
         assert s, f"Failed to export {file_name}: %s\n%s" % (out, err)
 
     return True

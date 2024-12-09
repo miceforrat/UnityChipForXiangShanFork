@@ -1,7 +1,7 @@
 import toffee_test
 import toffee
 from ..env import PredCheckerEnv
-from ..bundle import PredCheckerIOBundle
+from ..bundle import PredCheckerBundle, _13Bundle
 from dut.PredChecker import DUTPredChecker
 import toffee.funcov as fc
 from toffee.funcov import CovGroup
@@ -20,6 +20,5 @@ async def predchecker_env(toffee_request: toffee_test.ToffeeRequest):
     toffee_request.add_cov_groups(pred_checker_cover_point(dut))
     dut.InitClock("clock")
     toffee.start_clock(dut)
-    env = PredCheckerEnv(PredCheckerIOBundle.from_prefix('io_').bind(dut))
-    env.predCheckerAgent.bundle.sig_in.update1()
+    env = PredCheckerEnv(_13Bundle.from_prefix('').bind(dut))
     return env
