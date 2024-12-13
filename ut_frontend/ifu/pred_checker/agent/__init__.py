@@ -6,7 +6,7 @@ class PredCheckerAgent(Agent):
     def __init__(self, bundle: PredCheckerBundle):
         super().__init__(bundle)
         self.bundle = bundle
-        
+
     async def agent_pred_check(self, ftqValid, ftqOffBits, instrRange, instrValid, jumpOffset, pc, pds, tgt, fire):
         self.bundle.io._in._ftqOffset._valid.value = ftqValid
         self.bundle.io._in._ftqOffset._bits.value = ftqOffBits
@@ -21,11 +21,10 @@ class PredCheckerAgent(Agent):
             getattr(self.bundle.io._in._instrValid, f'_{i}').value = instrValid[i]
             getattr(self.bundle.io._in._jumpOffset, f'_{i}').value = jumpOffset[i]
             
-            # pd = getattr(self.bundle.io._in, f'pds_{i}_')
-            # pd = self.bundle.io._in.pds[i]
             getattr(self.bundle.io._in._pds, f'_{i}')._isRVC.value = pds[i][RVC_LABEL]
             getattr(self.bundle.io._in._pds, f'_{i}')._brType.value = pds[i][BRTYPE_LABEL]
             getattr(self.bundle.io._in._pds, f'_{i}')._isRet.value = pds[i][RET_LABEL]
+            
             # print(pd.brType.value)
         await self.bundle.step()
         # await self.bundle.step()
