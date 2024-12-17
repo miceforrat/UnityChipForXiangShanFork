@@ -16,3 +16,7 @@ async def test_fire(predchecker_env):
     tgt = 0
     async for res in predchecker_env.predCheckerAgent.agent_pred_check(valid, bits, instrRange, instrValid, jumpOffset, pc, pds, tgt, True):
         print(res)
+
+    fire = False
+    async for res in predchecker_env.predCheckerAgent.agent_pred_check(valid, bits, instrRange, instrValid, jumpOffset, pc, pds, tgt, fire):
+        print(res)
