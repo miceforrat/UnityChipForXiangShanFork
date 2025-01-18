@@ -98,10 +98,11 @@ async def test_rvc_expand_16bit_full(rvc_expander: RVCExpanderEnv, start, end):
                           }, name = "RVC_EXPAND_ALL_16B", dynamic_bin=True)
     # Reverse mark function to the check point
     gr.mark_function("RVC_EXPAND_ALL_16B", test_rvc_expand_16bit_full, bin_name="RANGE[%d-%d]"%(start, end))
+    covered = end
+
     # Drive the expander and check the result
     await rvc_expand(rvc_expander.agent, generate_rvc_instructions(start, end))
     # When go to here, the range[start, end] is covered
-    # covered = end
     # gr.sample()
 
 

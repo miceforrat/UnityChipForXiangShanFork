@@ -20,7 +20,6 @@ import datetime
 import toffee.funcov as fc
 
 from dut.PreDecode import *
-from dut.DecodeStage import *
 
 from comm import get_out_dir, debug, UT_FCOV, get_version_checker, module_name_with
 from dut.RVCExpander import *

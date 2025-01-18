@@ -1,4 +1,4 @@
-from toffee import Agent
+from toffee import Agent, driver_method
 from ..bundle import F3PreDecoderBundle
 
 class F3PreDecodeData():
@@ -8,6 +8,11 @@ class F3PreDecodeData():
 
     def __str__(self):
         return f"brTypes: {self.brTypes}\nisCalls: {self.isCalls}\nisRets: {self.isRets}"
+    
+    def __eq__(self, value):
+        if type(self) is not type(value):
+            return False
+        return self.__str__() == value.__str__()
 
 class F3PreDecoderAgent(Agent):
     
@@ -15,7 +20,7 @@ class F3PreDecoderAgent(Agent):
         super().__init__(bundle)
         self.bundle = bundle
     
-
+    @driver_method()
     async def f3_predecode(self, instrs: list[int]) -> F3PreDecodeData:
         for i in range(16):
             getattr(self.bundle.io._in_instr, f"_{i}").value= instrs[i]
