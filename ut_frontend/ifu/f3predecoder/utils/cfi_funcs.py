@@ -1,4 +1,4 @@
-from tools.op_bytes import fetch
+from ut_frontend.ifu.instr_utils import fetch
 
 
 def get_cfi_type(instr):

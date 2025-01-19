@@ -1,4 +1,4 @@
-from tools.op_bytes import fetch, concat
+from ut_frontend.ifu.instr_utils import fetch
 from dut.PreDecode import DUTPreDecode
 from toffee import CovGroup
 

@@ -1,6 +1,6 @@
 from toffee import Model, driver_hook
 from ..agent import PreDecodeDataDef
-from tools.op_bytes import fetch, concat
+from ut_frontend.ifu.instr_utils import fetch, concat
 
 class PredecodeRef(Model):
 
