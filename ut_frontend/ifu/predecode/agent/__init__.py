@@ -1,1 +1,1 @@
-from .predecode_agent import PreDecodeAgent
+from .predecode_agent import PreDecodeAgent, PreDecodeDataDef
