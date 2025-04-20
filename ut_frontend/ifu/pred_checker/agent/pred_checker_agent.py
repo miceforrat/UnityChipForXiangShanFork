@@ -7,29 +7,30 @@ class PredCheckerAgent(Agent):
         super().__init__(bundle)
         self.bundle = bundle
 
+    @driver_method()
     async def agent_pred_check(self, ftqValid, ftqOffBits, instrRange, instrValid, jumpOffset, pc, pds, tgt, fire):
-        self.bundle.io._in._ftqOffset._valid.value = ftqValid
-        self.bundle.io._in._ftqOffset._bits.value = ftqOffBits
-        self.bundle.io._in._target.value = tgt
-        self.bundle.io._in._fire_in.value = fire
+        self.bundle.io._in.ftqOffset.valid.value = ftqValid
+        self.bundle.io._in.ftqOffset.bits.value = ftqOffBits
+        self.bundle.io._in.target.value = tgt
+        self.bundle.io._in.fire_in.value = fire
         print("binds_single_finished")
         for i in range(PREDICT_WIDTH):
-            getattr(self.bundle.io._in._pc, f'_{i}').value = pc[i]
-            getattr(self.bundle.io._in._instrRange, f'_{i}').value = instrRange[i]
-            getattr(self.bundle.io._in._instrValid, f'_{i}').value = instrValid[i]
-            getattr(self.bundle.io._in._jumpOffset, f'_{i}').value = jumpOffset[i]
+            self.bundle.io._in.pcs[i].value = pc[i]
+            self.bundle.io._in.instrRanges[i].value = instrRange[i]
+            self.bundle.io._in.instrValids[i].value = instrValid[i]
+            self.bundle.io._in.jumpOffsets[i].value = jumpOffset[i]
             
-            getattr(self.bundle.io._in._pds, f'_{i}')._isRVC.value = pds[i][RVC_LABEL]
-            getattr(self.bundle.io._in._pds, f'_{i}')._brType.value = pds[i][BRTYPE_LABEL]
-            getattr(self.bundle.io._in._pds, f'_{i}')._isRet.value = pds[i][RET_LABEL]
+            self.bundle.io._in.pds[i]._isRVC.value = pds[i][RVC_LABEL]
+            self.bundle.io._in.pds[i]._brType.value = pds[i][BRTYPE_LABEL]
+            self.bundle.io._in.pds[i]._isRet.value = pds[i][RET_LABEL]
 
         await self.bundle.step()
-        stg1_fixedRange = [getattr(self.bundle.io._out._stage1Out._fixedRange, f'_{i}').value for i in range(PREDICT_WIDTH)]
-        stg1_fixedTaken = [getattr(self.bundle.io._out._stage1Out._fixedTaken, f'_{i}').value for i in range(PREDICT_WIDTH)]
-        yield stg1_fixedRange, stg1_fixedTaken
+        stg1_fixedRange = [self.bundle.io._out.stage1Out.fixedRanges[i].value for i in range(PREDICT_WIDTH)]
+        stg1_fixedTaken = [self.bundle.io._out.stage1Out.fixedTakens[i].value for i in range(PREDICT_WIDTH)]
+        # yield stg1_fixedRange, stg1_fixedTaken
         await self.bundle.step()
-        stg2_fixedTarget = [getattr(self.bundle.io._out._stage2Out._fixedTarget, f'_{i}').value for i in range(PREDICT_WIDTH)]
-        stg2_fixedMissPred = [getattr(self.bundle.io._out._stage2Out._fixedMissPred, f'_{i}').value for i in range(PREDICT_WIDTH)]
-        stg2_jalTarget = [getattr(self.bundle.io._out._stage2Out._jalTarget, f'_{i}').value for i in range(PREDICT_WIDTH)]
-        stg2_faultTypes = [getattr(self.bundle.io._out._stage2Out._faultType, f'_{i}')._value.value for i in range(PREDICT_WIDTH)]
-        yield stg2_fixedTarget, stg2_jalTarget, stg2_fixedMissPred, stg2_faultTypes
+        stg2_fixedTarget = [self.bundle.io._out.stage2Out.fixedTargets[i].value for i in range(PREDICT_WIDTH)]
+        stg2_fixedMissPred = [self.bundle.io._out.stage2Out.fixedMissPreds[i].value for i in range(PREDICT_WIDTH)]
+        stg2_jalTarget = [self.bundle.io._out.stage2Out.jalTargets[i].value for i in range(PREDICT_WIDTH)]
+        stg2_faultTypes = [self.bundle.io._out.stage2Out.faultTypes[i].value for i in range(PREDICT_WIDTH)]
+        return [ [stg1_fixedRange, stg1_fixedTaken], [stg2_fixedTarget, stg2_jalTarget, stg2_fixedMissPred, stg2_faultTypes]]

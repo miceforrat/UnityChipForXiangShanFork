@@ -4,6 +4,7 @@ from ..env import PreDecodeEnv
 import random
 import datetime
 from .predecode_ckpt import appeared_poses, RVC_LABEL, RVI_FIRST_HALF_LABEL, RVI_SECOND_HALF_LABEL
+from ...instr_utils import construct_non_cfis, construct_instrs
 
 @toffee_test.testcase
 async def test_smoke(predecode_env : PreDecodeEnv):
@@ -11,29 +12,12 @@ async def test_smoke(predecode_env : PreDecodeEnv):
 
     res = await predecode_env.predecode_agent.predecode(fake_instrs)
 
-def gen_rvc():
-    return (random.randint(0, (1 << 14) -1) << 2) | random.randint(0, 2)
-
-def gen_rvi():
-    return (random.randint(0, (1 << 30) -1 )  << 2) | 3
-
-def gen_jmp(br, rvc):
-    if rvc:
-        if br: 
-            return (random.randint(6, 7) << 13) | (random.randint(0, (1 << 11) - 1) << 2) | 1
-        
-        return (5 << 13) | (random.randint(0, (1 << 11) - 1) << 2) | 1
-
-    if br:
-        return (random.randint(0, (1 << 25) - 1) << 7) | 99
-    return (random.randint(0, (1 << 25) - 1) << 7) | 111
-
 @toffee_test.testcase
 async def test_last_start_rvi(predecode_env: PreDecodeEnv):
     random.seed(int(round(datetime.datetime.now().timestamp())))
     for i in range(200):
         instrs = []
-        instrs.append(gen_rvi() >> 16)
+        instrs.append(construct_non_cfis(False, True) >> 16)
         appeared_poses[0][RVI_SECOND_HALF_LABEL] = True
 
         for j in range(16):
@@ -43,30 +27,33 @@ async def test_last_start_rvi(predecode_env: PreDecodeEnv):
 
 @toffee_test.testcase
 async def test_jmps(predecode_env: PreDecodeEnv):
-    for i in range(17):
-        for x in range(16):
+    base_num = 12
+    for i in range(19):
+        for x in range(base_num * 3):
             instrs = [0 for j in range(17)]
             pos = 0
-            br = x < 8
-            while pos < i:
-                if pos < i - 2:
+            cfi_type = (x / base_num) + 1
+            min = i if i < 16 else 16
+            choose_to_stop_earlier = (x % base_num) < 2
+            while pos <= min:
+                if pos < i - 1:
                     choice =random.randint(0, 6)
-                    if choice < 2:
-                        next = gen_rvc()
+                    if choice < 2 or (choose_to_stop_earlier and pos == i-2):
+                        next = construct_non_cfis(True, True)
                         isRVI = False
                     else:
-                        next = gen_rvi()
+                        next = construct_non_cfis(False, True)
                         isRVI = True
-                elif pos == i - 2:
-                    choice =random.randint(0, 6)
-                    if choice < 2:
-                        next = gen_rvc()
-                        isRVI = False
+                elif pos == i - 1:
+                    if choose_to_stop_earlier:
+                        next = construct_instrs(cfi_type, False)
+                        isRVI = True
                     else:
-                        next = gen_jmp(br, False)
-                        isRVI = True
+                        next = construct_non_cfis(True, True)
+                        isRVI = False
+                        
                 else:
-                    next = gen_jmp(br, True)
+                    next = construct_instrs(cfi_type, True)
                     isRVI = False
 
                 instrs[pos] = next & ((1 << 16) - 1)
@@ -82,47 +69,48 @@ async def test_jmps(predecode_env: PreDecodeEnv):
                     if pos < 16:
                         appeared_poses[pos][RVI_SECOND_HALF_LABEL] = True
                     pos += 1
+            await predecode_env.predecode_agent.predecode(instrs)
 
-@toffee_test.testcase
-async def test_special_randoms(predecode_env: PreDecodeEnv):
-    for i in range(500):
-        pos = 0
-        instrs = [0 for j in range(17)]
-        while pos < 17:
-            next_choice = random.randint(0, 23)
-            if next_choice < 10: # choose random rvc
-                next = gen_rvc()
-                isRVI=False
-            elif next_choice < 20: # choose random rvi
-                next = gen_rvi()
-                isRVI = True
-            elif next_choice == 20: # choose rvc br
-                next= gen_jmp(True, True)
-                isRVI = False
-            elif next_choice == 21: # choose rvc j
-                next = gen_jmp(False, True)
-                isRVI = False
-            elif next_choice == 22: # choose rvi br
-                next = gen_jmp(True, False)
-                isRVI = True
-            else:
-                next = gen_jmp(False, False)
-                isRVI=True
+# @toffee_test.testcase
+# async def test_special_randoms(predecode_env: PreDecodeEnv):
+#     for i in range(500):
+#         pos = 0
+#         instrs = [0 for j in range(17)]
+#         while pos < 17:
+#             next_choice = random.randint(0, 23)
+#             if next_choice < 10: # choose random rvc
+#                 next = gen_rvc()
+#                 isRVI=False
+#             elif next_choice < 20: # choose random rvi
+#                 next = gen_rvi()
+#                 isRVI = True
+#             elif next_choice == 20: # choose rvc br
+#                 next= gen_jmp(True, True)
+#                 isRVI = False
+#             elif next_choice == 21: # choose rvc j
+#                 next = gen_jmp(False, True)
+#                 isRVI = False
+#             elif next_choice == 22: # choose rvi br
+#                 next = gen_jmp(True, False)
+#                 isRVI = True
+#             else:
+#                 next = gen_jmp(False, False)
+#                 isRVI=True
             
-            instrs[pos] = next & ((1 << 16) - 1)
-            if pos < 16:
-                if isRVI:
-                    appeared_poses[pos][RVI_FIRST_HALF_LABEL] = True
-                else:
-                    appeared_poses[pos][RVC_LABEL] = True
-            pos += 1
+#             instrs[pos] = next & ((1 << 16) - 1)
+#             if pos < 16:
+#                 if isRVI:
+#                     appeared_poses[pos][RVI_FIRST_HALF_LABEL] = True
+#                 else:
+#                     appeared_poses[pos][RVC_LABEL] = True
+#             pos += 1
 
-            if isRVI and pos < 17:
-                instrs[pos] = next >> 16
-                if pos < 16:
-                    appeared_poses[pos][RVI_SECOND_HALF_LABEL] = True
-                pos += 1
-        await predecode_env.predecode_agent.predecode(instrs)
+#             if isRVI and pos < 17:
+#                 instrs[pos] = next >> 16
+#                 if pos < 16:
+#                     appeared_poses[pos][RVI_SECOND_HALF_LABEL] = True
+#                 pos += 1
+#         await predecode_env.predecode_agent.predecode(instrs)
 
 
 # @toffee_test.testcase

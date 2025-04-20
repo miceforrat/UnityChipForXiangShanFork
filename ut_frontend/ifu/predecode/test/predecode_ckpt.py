@@ -1,4 +1,4 @@
-from ut_frontend.ifu.instr_utils import fetch
+from ut_frontend.ifu.instr_utils import fetch, get_cfi_type
 from dut.PreDecode import DUTPreDecode
 from toffee import CovGroup
 
@@ -20,8 +20,6 @@ def ckpt_rvci(isRVC, i):
 
 appeared_poses = [{RVC_LABEL: False, RVI_FIRST_HALF_LABEL: False, RVI_SECOND_HALF_LABEL: False} for i in range(16)]
 
-
-
 def ckpt_jmp_offs(isBr, isRVC, i):
 
     def check_jmp(dut:DUTPreDecode):
@@ -30,29 +28,12 @@ def ckpt_jmp_offs(isBr, isRVC, i):
         op = fetch(instr, 0, 1)
         # print(f"fetched {op}")
 
-        if isRVC:
-            if op != 1:
-                return False
-            funct = fetch(instr, 13, 15)
-            if isBr:
-                # print("br true detected")
-                return (funct == 6 or funct == 7)
-            else:
-                # print(f"j true detected")
+        if (op < 2) != isRVC:
+            return False
+        if isBr:
+            return get_cfi_type(instr) == 1
+        return get_cfi_type(instr) == 2
 
-                return funct == 5
-            
-        else:
-
-            if op != 3:
-                return False
-            
-            rvi_funct = fetch(instr, 0, 6)
-
-            if isBr:
-                return rvi_funct == 99
-            else:
-                return rvi_funct == 111
     return check_jmp
             
 from comm import UT_FCOV
@@ -86,15 +67,6 @@ def get_coverage_group_of_predecode(dut: DUTPreDecode) -> CovGroup:
             name=f"valids_hits_{i}"       
         )
 
-        # g.add_watch_point(appeared_poses,
-        #     {
-        #         f"{i}_{RVC_LABEL}": lambda: True,
-        #         f"{i}_{RVI_FIRST_HALF_LABEL}": lambda: True,
-        #         f"{i}_{RVI_SECOND_HALF_LABEL}": lambda: True
-        #     },
-        #     name=f"valids_hits_{i}"       
-        # )
-
         g.add_watch_point(dut, 
             {
                 f"{i}_rvc_br": ckpt_jmp_offs(True, True, i),
@@ -102,7 +74,7 @@ def get_coverage_group_of_predecode(dut: DUTPreDecode) -> CovGroup:
                 f"{i}_rvi_br": ckpt_jmp_offs(True, False, i),
                 f"{i}_rvi_j": ckpt_jmp_offs(False, False, i)                
             },
-            name=f"off_cal_hits_{i}"   
+            name=f"off_calculate_hits_{i}"   
         )
     return g
 

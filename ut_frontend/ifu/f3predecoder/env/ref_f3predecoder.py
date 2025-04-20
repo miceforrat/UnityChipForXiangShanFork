@@ -1,6 +1,6 @@
 from toffee import Model, driver_hook
 from ..agent import F3PreDecodeData
-from ..utils import get_cfi_type, if_ret, if_call
+from ...instr_utils import get_cfi_type, if_ret, if_call
 
 
 class F3PredecoderRef(Model):
@@ -11,8 +11,8 @@ class F3PredecoderRef(Model):
         for i in range(16):
             instr = instrs[i]
             ret.brTypes.append(get_cfi_type(instr))
-            ret.isCalls.append(if_call(instr, ret.brTypes[i]))
-            ret.isRets.append(if_ret(instr, ret.brTypes[i]))
+            ret.isCalls.append(1 if if_call(instr, ret.brTypes[i]) else 0)
+            ret.isRets.append(1 if if_ret(instr, ret.brTypes[i]) else 0)
         return ret
         
             

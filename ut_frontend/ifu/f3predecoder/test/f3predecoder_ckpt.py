@@ -1,6 +1,6 @@
 from dut.F3Predecoder import DUTF3Predecoder
 from toffee import CovGroup
-from ..utils import get_cfi_type, if_ret, if_call
+from ...instr_utils import get_cfi_type, if_ret, if_call
 
 def cfi_type_ckpt(tgt_type):
     def check_cfi_type(instr_pin):

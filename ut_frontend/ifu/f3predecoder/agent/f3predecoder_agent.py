@@ -2,9 +2,11 @@ from toffee import Agent, driver_method
 from ..bundle import F3PreDecoderBundle
 
 class F3PreDecodeData():
-    brTypes = [] 
-    isCalls = [] 
-    isRets = []
+    
+    def __init__(self):
+        self.brTypes = [] 
+        self.isCalls = [] 
+        self.isRets = []
 
     def __str__(self):
         return f"brTypes: {self.brTypes}\nisCalls: {self.isCalls}\nisRets: {self.isRets}"
@@ -29,6 +31,7 @@ class F3PreDecoderAgent(Agent):
         await self.bundle.step()
 
         ret = F3PreDecodeData()
+
         for i in range(16):
             ret.brTypes.append(self.bundle.out_pds[i]._brType.value)
             ret.isCalls.append(self.bundle.out_pds[i]._isCall.value)

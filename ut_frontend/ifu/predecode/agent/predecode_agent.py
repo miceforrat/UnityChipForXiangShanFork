@@ -33,9 +33,9 @@ class PreDecodeAgent(Agent):
         ret = PreDecodeDataDef()
 
         for i in range(16):
-            ret.new_instrs.append(self.bundle._out.instrs[i].value)
-            ret.jmp_offsets.append(self.bundle._out.jumpOffsets[i].value)
-            ret.rvcs.append(self.bundle._out.pds[i]._isRVC.value)
+            ret.new_instrs.append(self.bundle.out.instrs[i].value)
+            ret.jmp_offsets.append(self.bundle.out.jumpOffsets[i].value)
+            ret.rvcs.append(self.bundle.out.pds[i]._isRVC.value)
 
             if i == 0: 
                 ret.half_valid_starts.append(0)
@@ -43,10 +43,10 @@ class PreDecodeAgent(Agent):
 
             elif i == 1:
                 ret.half_valid_starts.append(1)
-                ret.valid_starts.append(self.bundle._out.pds[i]._valid.value)
+                ret.valid_starts.append(self.bundle.out.pds[i]._valid.value)
 
             else:
-                ret.half_valid_starts.append(self.bundle._out._hasHalfValid[i].value)
-                ret.valid_starts.append(self.bundle._out.pds[i]._valid.value)
+                ret.half_valid_starts.append(self.bundle.out.hasHalfValids[i].value)
+                ret.valid_starts.append(self.bundle.out.pds[i]._valid.value)
 
         return ret
